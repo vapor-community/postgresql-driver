@@ -1,4 +1,8 @@
-import CPostgreSQL
+#if os(Linux)
+    import CPostgreSQLLinux
+#else
+    import CPostgreSQLMac
+#endif
 
 public enum PostgresSQLError: ErrorType {
     case ConnectionException, IndexOutOfRangeException, NoSuchColumnException, SQLException
@@ -171,7 +175,7 @@ public class PSQLResult {
     }
     return String.fromCString(PQfname(result, Int32(index)))
 	}
-  
+
 	public func isNullAt(rowIndex: Int, columnIndex: Int) -> Bool {
     guard let result = result else {
       return true
