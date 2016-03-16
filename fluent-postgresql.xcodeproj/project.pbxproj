@@ -228,6 +228,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/.build/debug $(PROJECT_DIR)/Packages/**";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -266,6 +267,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/.build/debug $(PROJECT_DIR)/Packages/**";
 			};
 			name = Release;
 		};
@@ -279,7 +281,7 @@
 					"$(PROJECT_DIR)/.build/debug",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../.build/debug $(SRCROOT)/Packages/**";
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/.build/debug $(PROJECT_DIR)/Packages/**";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -294,7 +296,7 @@
 					"$(PROJECT_DIR)/.build/debug",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../.build/debug $(SRCROOT)/Packages/**";
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/.build/debug $(PROJECT_DIR)/Packages/**";
 			};
 			name = Release;
 		};

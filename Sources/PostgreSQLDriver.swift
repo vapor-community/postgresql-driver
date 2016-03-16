@@ -7,9 +7,9 @@ public class PostgreSQLDriver: Fluent.Driver {
 
     }
 
-    public init(connectionInfo: String) {
+    public init(connectionInfo: String) throws {
         self.database = PostgreSQL(connectionInfo: connectionInfo)
-        try! self.database.connect()
+        try self.database.connect()
     }
 
     public func execute(context: DSGenerator) -> [[String: StatementValue]]? {
