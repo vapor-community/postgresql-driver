@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		1E2CD25B1C97A64500D022F0 /* PostgreSQL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E2CD2591C97A64500D022F0 /* PostgreSQL.swift */; };
 		1E2CD25C1C97A64500D022F0 /* PostgreSQLDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E2CD25A1C97A64500D022F0 /* PostgreSQLDriver.swift */; };
+		1E662EF91C9927EC00F0C362 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E662EF71C9927EC00F0C362 /* main.swift */; };
+		1E662EFA1C9927EC00F0C362 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E662EF81C9927EC00F0C362 /* User.swift */; };
+		1E66A0A51C99286000B88FBC /* libFluent.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E66A0A41C99286000B88FBC /* libFluent.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +31,9 @@
 		1E2CD2591C97A64500D022F0 /* PostgreSQL.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PostgreSQL.swift; path = Sources/PostgreSQL.swift; sourceTree = SOURCE_ROOT; };
 		1E2CD25A1C97A64500D022F0 /* PostgreSQLDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PostgreSQLDriver.swift; path = Sources/PostgreSQLDriver.swift; sourceTree = SOURCE_ROOT; };
 		1E2CD25D1C97A64C00D022F0 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		1E662EF71C9927EC00F0C362 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = Sources/main.swift; sourceTree = "<group>"; };
+		1E662EF81C9927EC00F0C362 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = User.swift; path = Sources/User.swift; sourceTree = "<group>"; };
+		1E66A0A41C99286000B88FBC /* libFluent.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libFluent.dylib; path = .build/debug/libFluent.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E66A0A51C99286000B88FBC /* libFluent.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,7 +52,8 @@
 			isa = PBXGroup;
 			children = (
 				1E2CD25D1C97A64C00D022F0 /* Package.swift */,
-				1E2CD2511C97A61500D022F0 /* fluent-postgresql */,
+				1E662EF61C9927DA00F0C362 /* Sources */,
+				1E662EFC1C99282E00F0C362 /* Dependencies */,
 				1E2CD2501C97A61500D022F0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -58,13 +66,40 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		1E2CD2511C97A61500D022F0 /* fluent-postgresql */ = {
+		1E2CD2511C97A61500D022F0 /* PostgreSQL */ = {
 			isa = PBXGroup;
 			children = (
 				1E2CD2591C97A64500D022F0 /* PostgreSQL.swift */,
 				1E2CD25A1C97A64500D022F0 /* PostgreSQLDriver.swift */,
 			);
+			name = PostgreSQL;
 			path = "fluent-postgresql";
+			sourceTree = "<group>";
+		};
+		1E662EF61C9927DA00F0C362 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				1E2CD2511C97A61500D022F0 /* PostgreSQL */,
+				1E662EFB1C9927EF00F0C362 /* Models */,
+				1E662EF71C9927EC00F0C362 /* main.swift */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		1E662EFB1C9927EF00F0C362 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1E662EF81C9927EC00F0C362 /* User.swift */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		1E662EFC1C99282E00F0C362 /* Dependencies */ = {
+			isa = PBXGroup;
+			children = (
+				1E66A0A41C99286000B88FBC /* libFluent.dylib */,
+			);
+			name = Dependencies;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -142,8 +177,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E662EFA1C9927EC00F0C362 /* User.swift in Sources */,
 				1E2CD25B1C97A64500D022F0 /* PostgreSQL.swift in Sources */,
 				1E2CD25C1C97A64500D022F0 /* PostgreSQLDriver.swift in Sources */,
+				1E662EF91C9927EC00F0C362 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -237,8 +274,12 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/.build/debug",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../.build/debug";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../.build/debug $(SRCROOT)/Packages/**";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -248,8 +289,12 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/.build/debug",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../.build/debug";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../.build/debug $(SRCROOT)/Packages/**";
 			};
 			name = Release;
 		};
