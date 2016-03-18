@@ -7,16 +7,26 @@ do {
     
     Database.driver = try PostgreSQLDriver(connectionInfo: "host='localhost' port='5432' dbname='demodb0' user='princeugwuh' password=''")
     
-    if let t = Query<User>().with("id", .Equals, 1).all() {
-        print("TEST \(t.first!.name)")
+    if let t = Query<User>().filter("id", .Equals, 1).all() {
+        print("Using Query \(t.first!.name)")
     }
     
-    print("FIRST \(User.first()!.name)")
-    print("LAST \(User.last()!.name)")
-    if let user = User.findOne(1) {
-        print(user.name)
+    if let t = User.find("id", .Equals, 1) {
+        print("Using Model \(t.first!.name)")
+    }
+    
+    if let uf = User.first() {
+        print("FIRST \(uf.name)")
+    }
+    
+    if let ul = User.last() {
+        print("FIRST \(ul.name)")
+    }
+    
+    if let user = User.find(1) {
+        print("FOUND \(user.name)")
         
-        user.name = "Amy Ugwuh"
+        user.name = "Steve Jobs"
         user.save()
     }
     

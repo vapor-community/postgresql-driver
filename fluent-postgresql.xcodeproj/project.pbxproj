@@ -11,7 +11,6 @@
 		1E2CD25C1C97A64500D022F0 /* PostgreSQLDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E2CD25A1C97A64500D022F0 /* PostgreSQLDriver.swift */; };
 		1E662EF91C9927EC00F0C362 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E662EF71C9927EC00F0C362 /* main.swift */; };
 		1E662EFA1C9927EC00F0C362 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E662EF81C9927EC00F0C362 /* User.swift */; };
-		1E66A0A51C99286000B88FBC /* libFluent.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E66A0A41C99286000B88FBC /* libFluent.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,7 +32,6 @@
 		1E2CD25D1C97A64C00D022F0 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		1E662EF71C9927EC00F0C362 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = Sources/main.swift; sourceTree = "<group>"; };
 		1E662EF81C9927EC00F0C362 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = User.swift; path = Sources/User.swift; sourceTree = "<group>"; };
-		1E66A0A41C99286000B88FBC /* libFluent.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libFluent.dylib; path = .build/debug/libFluent.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,7 +39,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1E66A0A51C99286000B88FBC /* libFluent.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,7 +94,6 @@
 		1E662EFC1C99282E00F0C362 /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
-				1E66A0A41C99286000B88FBC /* libFluent.dylib */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";

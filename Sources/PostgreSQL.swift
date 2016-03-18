@@ -54,7 +54,7 @@ public class PostgreSQL {
         PQfinish(connection)
     }
     
-    public func createStatement(withQuery query: String? = nil, values: [StatementValue]? = nil) -> PSQLStatement {
+    public func createStatement(withQuery query: String? = nil, values: [Value]? = nil) -> PSQLStatement {
         let statement = PSQLStatement(connection: connection)
         statement.query = query
         statement.values = values
@@ -67,7 +67,7 @@ public class PSQLStatement {
     private(set) var affectedRows: Int = -1
     private(set) var errorMessage: String = ""
     var query: String?
-    var values: [StatementValue]?
+    var values: [Value]?
     var connection: COpaquePointer?
     
     public init(connection: COpaquePointer?) {
@@ -86,7 +86,7 @@ public class PSQLStatement {
         var retVal = false
         let res: COpaquePointer
         if let values = values where values.count > 0 {
-            var items = values.map { return $0.asString }
+            var items = values.map { return $0.string }
             let paramsValues = UnsafeMutablePointer<UnsafePointer<Int8>>.alloc(items.count)
             
             var v = [[UInt8]]()

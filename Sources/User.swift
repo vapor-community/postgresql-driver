@@ -8,7 +8,7 @@ class User: Model {
         self.name = name
     }
     
-    func serialize() -> [String: StatementValue] {
+    func serialize() -> [String: Value] {
         return [
                    "name": self.name,
         ]
@@ -18,9 +18,9 @@ class User: Model {
         return "users"
     }
     
-    required init(deserialize: [String: StatementValue]) {
-        self.id = deserialize["id"]?.asString ?? ""
-        self.name = deserialize["name"]?.asString ?? ""
+    required init(serialized: [String: Value]) {
+        self.id = serialized["id"]?.string ?? ""
+        self.name = serialized["name"]?.string ?? ""
     }
     
 }
