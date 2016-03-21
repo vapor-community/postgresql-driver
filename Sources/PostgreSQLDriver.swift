@@ -19,10 +19,10 @@ class P_SQL<T: Model>: SQL<T> {
 }
 
 public class PostgreSQLDriver: Fluent.Driver {
-    private(set) var database: PostgreSQL!
+    let database: PostgreSQL!
 
     private init() {
-
+        database = nil
     }
 
     public init(connectionInfo: String) throws {
@@ -32,7 +32,9 @@ public class PostgreSQLDriver: Fluent.Driver {
 
     public func execute<T: Model>(query: Query<T>) throws -> [[String: Value]] {
         let sql = P_SQL(query: query)
-        let statement = self.database.createStatement(withQuery: sql.statement, values: sql.values)
+        let values: [String] = sql.values.map { return $0.string }
+        let statement = self.database.createStatement(withQuery: sql.statement, values: values)
+        
         do {
           if try statement.execute() {
             if let data = dataFromResult(statement.result) {

@@ -4,8 +4,6 @@
     import CPostgreSQLMac
 #endif
 
-import Fluent
-
 public enum PostgresSQLError: ErrorType {
     case ConnectionException, IndexOutOfRangeException, NoSuchColumnException, SQLException
 }
@@ -54,7 +52,7 @@ public class PostgreSQL {
         PQfinish(connection)
     }
     
-    public func createStatement(withQuery query: String? = nil, values: [Value]? = nil) -> PSQLStatement {
+    public func createStatement(withQuery query: String? = nil, values: [String]? = nil) -> PSQLStatement {
         let statement = PSQLStatement(connection: connection)
         statement.query = query
         statement.values = values
@@ -67,7 +65,7 @@ public class PSQLStatement {
     private(set) var affectedRows: Int = -1
     private(set) var errorMessage: String = ""
     var query: String?
-    var values: [Value]?
+    var values: [String]?
     var connection: COpaquePointer?
     
     public init(connection: COpaquePointer?) {
@@ -86,22 +84,21 @@ public class PSQLStatement {
         var retVal = false
         let res: COpaquePointer
         if let values = values where values.count > 0 {
-            var items = values.map { return $0.string }
-            let paramsValues = UnsafeMutablePointer<UnsafePointer<Int8>>.alloc(items.count)
+            let paramsValues = UnsafeMutablePointer<UnsafePointer<Int8>>.alloc(values.count)
             
             var v = [[UInt8]]()
-            for i in 0..<items.count {
-                var ch = [UInt8](items[i].utf8)
+            for i in 0..<values.count {
+                var ch = [UInt8](values[i].utf8)
                 ch.append(0)
                 v.append(ch)
                 paramsValues[i] = UnsafePointer<Int8>(v.last!)
             }
             
-            res = PQexecParams(connection, query, Int32(items.count), nil, paramsValues, nil, nil, Int32(0))
+            res = PQexecParams(connection, query, Int32(values.count), nil, paramsValues, nil, nil, Int32(0))
             
             defer {
                 paramsValues.destroy()
-                paramsValues.dealloc(items.count)
+                paramsValues.dealloc(values.count)
             }
         } else {
             res = PQexec(connection, query)

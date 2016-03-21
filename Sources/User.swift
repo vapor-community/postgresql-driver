@@ -8,8 +8,9 @@ class User: Model {
         self.name = name
     }
     
-    func serialize() -> [String: Value] {
+    func serialize() -> [String: Value?] {
         return [
+                   "id": nil,
                    "name": self.name,
         ]
     }
