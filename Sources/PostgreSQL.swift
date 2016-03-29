@@ -4,12 +4,12 @@
     import CPostgreSQLMac
 #endif
 
-public enum PostgresSQLError: ErrorType {
-    case ConnectionException, IndexOutOfRangeException, NoSuchColumnException, SQLException
+public enum PostgresSQLError: ErrorProtocol {
+    case CannotEstablishConnection, IndexOutOfRange, ColumnNotFound, InvalidSQL(message: String), NoQuery, NoResults
 }
 
 public class PostgreSQL {
-    private(set) var connection: COpaquePointer!
+    private(set) var connection: OpaquePointer!
     public var connectionInfo: String?
     public var connected: Bool {
         if let connection = connection where PQstatus(connection) == CONNECTION_OK {
@@ -28,17 +28,17 @@ public class PostgreSQL {
     
     public func connect() throws {
         guard let connectionInfo = connectionInfo else {
-            throw PostgresSQLError.ConnectionException
+            throw PostgresSQLError.CannotEstablishConnection
         }
         connection = PQconnectdb(connectionInfo)
         if !connected {
-            throw PostgresSQLError.ConnectionException
+            throw PostgresSQLError.CannotEstablishConnection
         }
     }
     
     public func reset() throws {
         guard let connection = connection else {
-            throw PostgresSQLError.ConnectionException
+            throw PostgresSQLError.CannotEstablishConnection
         }
         
         PQreset(connection)
@@ -46,7 +46,7 @@ public class PostgreSQL {
     
     public func close() throws {
         guard let connection = connection else {
-            throw PostgresSQLError.ConnectionException
+            throw PostgresSQLError.CannotEstablishConnection
         }
         
         PQfinish(connection)
@@ -61,30 +61,29 @@ public class PostgreSQL {
 }
 
 public class PSQLStatement {
-    private(set) var result: PSQLResult?
+    //private(set) var result: PSQLResult?
     private(set) var affectedRows: Int = -1
     private(set) var errorMessage: String = ""
     var query: String?
     var values: [String]?
-    var connection: COpaquePointer?
+    var connection: OpaquePointer?
     
-    public init(connection: COpaquePointer?) {
+    public init(connection: OpaquePointer?) {
         self.connection = connection
     }
     
-    public func execute() throws -> Bool {
+    public func execute() throws -> PSQLResult {
         guard let connection = connection else {
-            return false
+            throw PostgresSQLError.CannotEstablishConnection
         }
         
         guard let query = query else {
-            return false
+            throw PostgresSQLError.NoQuery
         }
-        
-        var retVal = false
-        let res: COpaquePointer
+    
+        let res: OpaquePointer
         if let values = values where values.count > 0 {
-            let paramsValues = UnsafeMutablePointer<UnsafePointer<Int8>>.alloc(values.count)
+            let paramsValues = UnsafeMutablePointer<UnsafePointer<Int8>>.init(allocatingCapacity: values.count)
             
             var v = [[UInt8]]()
             for i in 0..<values.count {
@@ -97,46 +96,41 @@ public class PSQLStatement {
             res = PQexecParams(connection, query, Int32(values.count), nil, paramsValues, nil, nil, Int32(0))
             
             defer {
-                paramsValues.destroy()
-                paramsValues.dealloc(values.count)
+                paramsValues.deinitialize()
+                paramsValues.deallocateCapacity(values.count)
             }
         } else {
             res = PQexec(connection, query)
         }
         
-        errorMessage = String.fromCString(PQcmdTuples(res)) ?? ""
-        
+        errorMessage = String(PQcmdTuples(res)) ?? ""
         switch PQresultStatus(res) {
         case PGRES_COMMAND_OK:
-            retVal = true
-        //affectedRows = PQclear(intResult)
+            break
         case PGRES_TUPLES_OK:
-            result = PSQLResult(result: res)
-            retVal = true
+            return PSQLResult(result: res)
         case PGRES_COPY_OUT:
-            retVal = true
             PQclear(res)
         case PGRES_BAD_RESPONSE:
-            retVal = false
             PQclear(res)
         case PGRES_NONFATAL_ERROR:
-            retVal = true
-            errorMessage = String.fromCString(PQresultErrorMessage(res)) ?? ""
+            errorMessage = String(PQresultErrorMessage(res)) ?? ""
             PQclear(res)
+            throw PostgresSQLError.InvalidSQL(message: errorMessage)
         case PGRES_FATAL_ERROR:
-            retVal = false
-            errorMessage = String.fromCString(PQresultErrorMessage(res)) ?? ""
+            errorMessage = String(PQresultErrorMessage(res)) ?? ""
             PQclear(res)
-            throw PostgresSQLError.SQLException
+            throw PostgresSQLError.InvalidSQL(message: errorMessage)
         default:
             break
         }
-        return retVal
+        
+        throw PostgresSQLError.NoResults
     }
 }
 
 public class PSQLResult {
-    private(set) var result: COpaquePointer?
+    private(set) var result: OpaquePointer?
     private(set) var currentRow: Int = -1
     
     public var rowCount: Int {
@@ -176,7 +170,7 @@ public class PSQLResult {
         return false
     }
     
-    public init(result: COpaquePointer) {
+    public init(result: OpaquePointer) {
         self.result = result
     }
     
@@ -191,7 +185,7 @@ public class PSQLResult {
         guard let result = result else {
             return ""
         }
-        return String.fromCString(PQfname(result, Int32(index)))
+        return String(PQfname(result, Int32(index)))
     }
     
     public func isNullAt(rowIndex: Int, columnIndex: Int) -> Bool {
@@ -205,6 +199,6 @@ public class PSQLResult {
         guard let result = result else {
             return ""
         }
-        return String.fromCString(PQgetvalue(result, Int32(rowIndex), Int32(columnIndex))) ?? ""
+        return String(PQgetvalue(result, Int32(rowIndex), Int32(columnIndex))) ?? ""
     }
 }

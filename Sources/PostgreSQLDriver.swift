@@ -36,23 +36,31 @@ public class PostgreSQLDriver: Fluent.Driver {
         let statement = self.database.createStatement(withQuery: sql.statement, values: values)
         
         do {
-          if try statement.execute() {
-            if let data = dataFromResult(statement.result) {
-              return data
-            }
-          }
-        } catch {
-            print(statement.errorMessage)
+            let result = try statement.execute()
+            return dataFromResult(result)
+        } catch PostgresSQLError.CannotEstablishConnection {
+            throw DriverError.Generic(message: "Connection lost or cannot be established")
+        } catch PostgresSQLError.ColumnNotFound {
+            throw DriverError.Generic(message: "Invalid Column name")
+        } catch PostgresSQLError.IndexOutOfRange {
+            throw DriverError.Generic(message: "Index out of range")
+        } catch PostgresSQLError.InvalidSQL(let message) {
+            throw DriverError.Generic(message: message)
+        } catch PostgresSQLError.NoQuery {
+            throw DriverError.Generic(message: "No query created")
+        } catch PostgresSQLError.NoResults {
+            throw DriverError.Generic(message: "No results")
         }
-        return []
     }
 
     // MARK: - Internal
     // TODO: have return values not be just strings
     
-    internal func dataFromResult(result: PSQLResult?) -> [[String: Value]]? {
-      guard let result = result else { return nil }
-      if result.rowCount > 0 && result.columnCount > 0 {
+    internal func dataFromResult(result: PSQLResult) -> [[String: Value]] {
+        guard result.rowCount > 0 && result.columnCount > 0 else {
+            return []
+        }
+        
         var data: [[String: Value]] = []
         var row: Int = 0
         while row < result.rowCount {
@@ -66,7 +74,5 @@ public class PostgreSQLDriver: Fluent.Driver {
             row += 1
         }
         return data
-      }
-      return nil
     }
 }
