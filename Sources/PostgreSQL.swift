@@ -83,7 +83,7 @@ public class PSQLStatement {
     
         let res: OpaquePointer
         if let values = values where values.count > 0 {
-            let paramsValues = UnsafeMutablePointer<UnsafePointer<Int8>>.init(allocatingCapacity: values.count)
+            let paramsValues = UnsafeMutablePointer<UnsafePointer<Int8>?>.init(allocatingCapacity: values.count)
             
             var v = [[UInt8]]()
             for i in 0..<values.count {
@@ -114,11 +114,11 @@ public class PSQLStatement {
         case PGRES_BAD_RESPONSE:
             PQclear(res)
         case PGRES_NONFATAL_ERROR:
-            errorMessage = String(PQresultErrorMessage(res)) ?? ""
+			errorMessage = String(cString: PQresultErrorMessage(res)) ?? ""
             PQclear(res)
             throw PostgresSQLError.InvalidSQL(message: errorMessage)
         case PGRES_FATAL_ERROR:
-            errorMessage = String(PQresultErrorMessage(res)) ?? ""
+            errorMessage = String(cString: PQresultErrorMessage(res)) ?? ""
             PQclear(res)
             throw PostgresSQLError.InvalidSQL(message: errorMessage)
         default:
@@ -181,24 +181,24 @@ public class PSQLResult {
         PQclear(result)
     }
     
-    public func columnName(index: Int) -> String? {
+    public func columnName(_ index: Int) -> String? {
         guard let result = result else {
             return ""
         }
-        return String(PQfname(result, Int32(index)))
+		return String(cString: PQfname(result, Int32(index)))
     }
     
-    public func isNullAt(rowIndex: Int, columnIndex: Int) -> Bool {
+    public func isNullAt(_ rowIndex: Int, columnIndex: Int) -> Bool {
         guard let result = result else {
             return true
         }
         return 1 == PQgetisnull(result, Int32(rowIndex), Int32(columnIndex))
     }
     
-    public func stringAt(rowIndex: Int, columnIndex: Int) -> String {
+    public func stringAt(_ rowIndex: Int, columnIndex: Int) -> String {
         guard let result = result else {
             return ""
         }
-        return String(PQgetvalue(result, Int32(rowIndex), Int32(columnIndex))) ?? ""
+		return String(cString: PQgetvalue(result, Int32(rowIndex), Int32(columnIndex))) ?? ""
     }
 }
