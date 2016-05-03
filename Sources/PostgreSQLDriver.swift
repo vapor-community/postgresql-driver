@@ -30,11 +30,13 @@ public class PostgreSQLDriver: Fluent.Driver {
         try self.database.connect()
     }
 
-    public func execute<T: Model>(query: Query<T>) throws -> [[String: Value]] {
+    public func execute<T: Model>(_ query: Query<T>) throws -> [[String: Value]] {
         let sql = P_SQL(query: query)
+		let sqlStatement = sql.statement //Statement is a computed property that builds sql.values Values is empty before statement is first called
         let values: [String] = sql.values.map { return $0.string }
-        let statement = self.database.createStatement(withQuery: sql.statement, values: values)
-        
+		
+        let statement = self.database.createStatement(withQuery: sqlStatement, values: values)
+		
         do {
             let result = try statement.execute()
             return dataFromResult(result)
@@ -56,7 +58,7 @@ public class PostgreSQLDriver: Fluent.Driver {
     // MARK: - Internal
     // TODO: have return values not be just strings
     
-    internal func dataFromResult(result: PSQLResult) -> [[String: Value]] {
+    internal func dataFromResult(_ result: PSQLResult) -> [[String: Value]] {
         guard result.rowCount > 0 && result.columnCount > 0 else {
             return []
         }
