@@ -2,7 +2,7 @@ import XCTest
 @testable import FluentPostgreSQL
 import Fluent
 
-class PostgreSQLDriverTests: XCTestCase {
+class FluentPostgreSQLTests: XCTestCase {
     static let allTests = [
         ("testSaveAndFind", testSaveAndFind)
     ]
