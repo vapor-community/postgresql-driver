@@ -16,7 +16,7 @@ install:
       sudo apt-get install postgresql postgresql-contrib;
     fi
   - sudo -u postgres createuser user_testing;
-  - createdb test;
+  - createdb users;
   - eval "$(curl -sL swift.vapor.sh/travis)"
 script:
   - eval "$(curl -sL swift.qutheory.io/ci)"
