@@ -1,0 +1,23 @@
+os:
+  - linux
+  - osx
+language: generic
+sudo: required
+dist: trusty
+osx_image: xcode8
+install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew install postgresql;
+      brew link postgresql;
+      brew services start postgresql;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      sudo apt-get update;
+      sudo apt-get install postgresql postgresql-contrib;
+    fi
+  - sudo -u postgres createuser user_testing;
+  - createdb test;
+  - eval "$(curl -sL swift.vapor.sh/travis)"
+script:
+  - eval "$(curl -sL swift.qutheory.io/ci)"
+  - eval "$(curl -sL swift.qutheory.io/codecov)"
