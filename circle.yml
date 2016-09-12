@@ -1,4 +1,3 @@
-
 dependencies:
   pre:
     - sudo -u postgres createuser user_testing 
