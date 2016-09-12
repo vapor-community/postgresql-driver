@@ -1,7 +1,7 @@
 #if os(Linux)
 
 import XCTest
-@testable import FluentPostgreSQLTestSuite
+@testable import FluentPostgreSQLTests
 
 XCTMain([
     testCase(PostgreSQLDriverTests.allTests),
