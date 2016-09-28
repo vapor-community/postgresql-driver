@@ -2,17 +2,17 @@ import XCTest
 @testable import FluentPostgreSQL
 import Fluent
 
-class PostgreSQLDriverTests: XCTestCase {
+class DriverTests: XCTestCase {
     static let allTests = [
         ("testSaveAndFind", testSaveAndFind)
     ]
 
-    private(set) var database: Fluent.Database!
-    private(set) var driver: PostgreSQLDriver!
+    var database: Fluent.Database!
+    var driver: PostgreSQLDriver!
 
     override func setUp() {
         driver = PostgreSQLDriver.makeTestConnection()
-        database = Database(driver: driver)
+        database = Database(driver)
     }
 
     func testSaveAndFind() {
@@ -24,17 +24,25 @@ class PostgreSQLDriverTests: XCTestCase {
 
         do {
             try user.save()
+            print("Save Successful")
         } catch {
             XCTFail("Could not save: \(error)")
         }
 
         do {
             let found = try User.find(1)
-            //XCTAssertEqual(found?.id?.string, user.id?.string)
+            XCTAssertEqual(found?.id?.string, user.id?.string)
             XCTAssertEqual(found?.name, user.name)
             XCTAssertEqual(found?.email, user.email)
         } catch {
             XCTFail("Could not find user: \(error)")
+        }
+
+        do {
+            let user = try User.find(2)
+            XCTAssertNil(user)
+        } catch {
+            XCTFail("User should not exist: \(error)")
         }
     }
 }
