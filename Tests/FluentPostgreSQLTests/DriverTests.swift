@@ -15,9 +15,9 @@ class DriverTests: XCTestCase {
         database = Database(driver)
     }
 
-    func testSaveAndFind() {
-        try! driver.raw("DROP TABLE IF EXISTS users")
-        try! driver.raw("CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(16), email VARCHAR(100))")
+    func testSaveAndFind() throws {
+        try driver.raw("DROP TABLE IF EXISTS users")
+        try driver.raw("CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(16), email VARCHAR(100))")
 
         var user = User(id: nil, name: "Vapor", email: "vapor@qutheory.io")
         User.database = database
