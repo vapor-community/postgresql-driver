@@ -31,7 +31,7 @@ class DriverTests: XCTestCase {
 
         do {
             let found = try User.find(1)
-            XCTAssertEqual(found?.id?.string, user.id?.string)
+            XCTAssertEqual(found?.id!, 1)
             XCTAssertEqual(found?.name, user.name)
             XCTAssertEqual(found?.email, user.email)
         } catch {
