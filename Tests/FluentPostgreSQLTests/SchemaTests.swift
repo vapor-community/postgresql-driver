@@ -16,6 +16,7 @@ class SchemaTests: XCTestCase {
     }
 
     final class SchemaTester: Entity {
+        var exists: Bool = false
         static var entity = "schema_tests"
 
         var id: Node?
@@ -65,7 +66,7 @@ class SchemaTests: XCTestCase {
         }
 
         static func prepare(_ database: Database) throws {
-            try database.create("schema_tests") { builder in
+            try database.create(entity) { builder in
                 builder.id()
                 builder.int("int")
                 builder.string("string_default")
@@ -76,15 +77,24 @@ class SchemaTests: XCTestCase {
             }
         }
         static func revert(_ database: Database) throws {
-            try database.delete("schema_tests")
+            try database.delete(entity)
         }
     }
 
     func testBasic() throws {
         SchemaTester.database = database
 
-        try SchemaTester.revert(database)
-        try SchemaTester.prepare(database)
+        do {
+            try SchemaTester.revert(database)
+        } catch {
+            XCTFail("Could not revert database: \(error)")
+        }
+
+        do {
+            try SchemaTester.prepare(database)
+        } catch {
+            XCTFail("Could not prepare database: \(error)")
+        }
 
         var test = SchemaTester(
             int: 42,

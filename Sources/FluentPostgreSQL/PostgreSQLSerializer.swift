@@ -29,6 +29,8 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
             }
         case .double:
             return "FLOAT"
+        case .data:
+            return "BYTEA"
         default:
             break
         }
