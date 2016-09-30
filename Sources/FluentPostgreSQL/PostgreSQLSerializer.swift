@@ -113,10 +113,10 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
     public override func sql(limit: Limit) -> String {
         
         var statement: [String] = []
-        statement += "OFFSET"
-        statement += "\(limit.offset)"
         statement += "LIMIT"
         statement += "\(limit.count)"
+        statement += "OFFSET"
+        statement += "\(limit.offset)"
         
         return statement.joined(separator: " ")
     }
