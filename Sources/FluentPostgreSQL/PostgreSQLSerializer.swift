@@ -1,16 +1,16 @@
 import Fluent
 
 public final class PostgreSQLSerializer: GeneralSQLSerializer {
-    var placeholderCount: Int = 0
-
-    public override func sql(_ value: Node) -> String {
-        self.placeholderCount += 1
-        return "$\(self.placeholderCount)"
-    }
+    var positionalParameter: Int = 0
 
     public override func serialize() -> (String, [Node]) {
-        self.placeholderCount = 0
+        self.positionalParameter = 0
         return super.serialize()
+    }
+
+    public override func sql(_ value: Node) -> String {
+        self.positionalParameter += 1
+        return "$\(self.positionalParameter)"
     }
 
     public override func sql(_ string: String) -> String {
@@ -35,6 +35,50 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
         return super.sql(type)
     }
 
+    public override func sql(_ filter: Filter) -> (String, [Node]) {
+        var statement: [String] = []
+        var values: [Node] = []
+
+        switch filter.method {
+        case .compare(let key, let comparison, let value):
+            self.positionalParameter += 1
+
+            statement += "\(sql(filter.entity.entity)).\(sql(key))"
+            statement += sql(comparison)
+            // Use the positionalParameter instead of "?"
+            statement += "$\(self.positionalParameter)"
+
+            /**
+                `.like` comparison operator requires additional
+                processing of `value`
+             */
+            switch comparison {
+            case .hasPrefix:
+                values += sql(hasPrefix: value)
+            case .hasSuffix:
+                values += sql(hasSuffix: value)
+            case .contains:
+                values += sql(contains: value)
+            default:
+                values += value
+            }
+        case .subset(let key, let scope, let subValues):
+            statement += "\(sql(filter.entity.entity)).\(sql(key))"
+            statement += sql(scope)
+            statement += sql(subValues)
+            values += subValues
+        case .group(let relation, let filters):
+            let (clause, subvals) = sql(filters, relation: relation)
+            statement += "(\(clause))"
+            values += subvals
+        }
+
+        return (
+            sql(statement),
+            values
+        )
+    }
+
     public override func sql(_ data: Node?) -> (String, [Node])? {
         guard let node = data else {
             return nil
@@ -46,13 +90,17 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
 
         var clause: [String] = []
 
-        if dict.keys.contains("id") {
+        // Differs from Fluent implementation
+        // Removes idKey value
+        // The idKey needs to be blank when inserting a record
+        if (dict["id"]?.isNull)! {
             dict.removeValue(forKey: "id")
         }
 
+        let keys = Array(dict.keys)
         let values = Array(dict.values)
 
-        clause += sql(keys: Array(dict.keys))
+        clause += sql(keys: keys)
         clause += "VALUES"
         clause += sql(values)
 
