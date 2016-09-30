@@ -30,17 +30,21 @@ class JoinTests: XCTestCase {
 
         var hydrogen = Atom(name: "Hydrogen", protons: 1)
         try hydrogen.save()
+        try hydrogen = Atom.find(1)!
 
         var water = Compound(name: "Water")
         try water.save()
+        try water = Compound.find(1)!
+
         var hydrogenWater = Pivot<Atom, Compound>(hydrogen, water)
         try hydrogenWater.save()
 
         var sugar = Compound(name: "Sugar")
         try sugar.save()
+        try sugar = Compound.find(2)!
+
         var hydrogenSugar = Pivot<Atom, Compound>(hydrogen, sugar)
         try hydrogenSugar.save()
-
 
         let compounds = try hydrogen.compounds().all()
         XCTAssertEqual(compounds.count, 2)
