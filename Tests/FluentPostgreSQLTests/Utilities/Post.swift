@@ -2,12 +2,10 @@ import Fluent
 
 final class Post: Entity {
     /**
-     Turn the convertible into a node
-
-     - throws: if convertible can not create a Node
-     - returns: a node if possible
-     */
-
+        Turn the convertible into a node
+        - throws: if convertible can not create a Node
+        - returns: a node if possible
+    */
     var id: Fluent.Node?
     var title: String
     var text: String

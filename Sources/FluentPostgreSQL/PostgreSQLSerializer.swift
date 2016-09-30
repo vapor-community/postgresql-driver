@@ -53,7 +53,7 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
             /**
                 `.like` comparison operator requires additional
                 processing of `value`
-             */
+            */
             switch comparison {
             case .hasPrefix:
                 values += sql(hasPrefix: value)
@@ -111,7 +111,7 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
             values
         )
     }
-    
+
     public override func sql(limit: Limit) -> String {
         var statement: [String] = []
 
@@ -119,7 +119,7 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
         statement += "\(limit.count)"
         statement += "OFFSET"
         statement += "\(limit.offset)"
-        
+
         return statement.joined(separator: " ")
     }
 }
