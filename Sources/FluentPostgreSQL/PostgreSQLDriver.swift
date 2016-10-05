@@ -20,7 +20,7 @@ public class PostgreSQLDriver: Fluent.Driver {
         dbname: String,
         user: String,
         password: String
-        ) {
+    ) {
 
         self.database = PostgreSQL.Database(
             host: host,
@@ -45,7 +45,34 @@ public class PostgreSQLDriver: Fluent.Driver {
     public func query<T: Entity>(_ query: Query<T>) throws -> Node {
         let serializer = PostgreSQLSerializer(sql: query.sql)
         let (statement, values) = serializer.serialize()
-        return try raw(statement, values)
+
+        // create a connection in case it
+        // needs to be used twice to fetch
+        // data about the query
+        let connection = try database.makeConnection()
+
+        // execute the main statement
+        let result = try _execute(statement, values, connection)
+
+        switch query.action {
+        case .create:
+            // fetch the last inserted value
+            let lastval = try _execute("SELECT LASTVAL();", [], connection)
+
+            // check if it contains an id
+            if let id = lastval[0, "lastval"]?.int {
+                // return the id to fluent to
+                // be the model's new id
+                return .number(.int(id))
+            } else {
+                // no id found, return whatever
+                // the results are
+                return result
+            }
+        default:
+            // return the results of the query
+            return result
+        }
     }
 
     /**
@@ -55,7 +82,7 @@ public class PostgreSQLDriver: Fluent.Driver {
         let serializer = PostgreSQLSerializer(sql: schema.sql)
         let (statement, values) = serializer.serialize()
 
-        try raw(statement, values)
+        _ = try _execute(statement, values)
     }
 
     /**
@@ -63,7 +90,20 @@ public class PostgreSQLDriver: Fluent.Driver {
     */
     @discardableResult
     public func raw(_ raw: String, _ values: [Node]) throws -> Node {
-        let connection = try database.makeConnection()
+        return try _execute(raw, values)
+    }
+
+    // MARK: Private
+
+    private func _execute(_ raw: String, _ values: [Node] = [], _ conn: Connection? = nil) throws -> Node {
+        let connection: Connection
+
+        if let c = conn {
+            connection = c
+        } else {
+            connection = try database.makeConnection()
+        }
+
         let result = try database.execute(raw, values, on: connection).map { Node.object($0) }
         return .array(result)
     }
