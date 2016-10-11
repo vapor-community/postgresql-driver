@@ -69,6 +69,13 @@ public class PostgreSQLDriver: Fluent.Driver {
                 // the results are
                 return result
             }
+        case .count:
+            // Get the first row and first column value as int
+            // (which should be the count, otherwise use 0)
+            let integer = result
+                .nodeArray?.first?
+                .nodeObject?.first?.1.int ?? 0
+            return .number(.int(integer))
         default:
             // return the results of the query
             return result
