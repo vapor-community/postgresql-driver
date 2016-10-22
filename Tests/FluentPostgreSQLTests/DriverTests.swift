@@ -51,7 +51,7 @@ class DriverTests: XCTestCase {
         try driver.raw("DROP TABLE IF EXISTS users")
         try driver.raw("CREATE TABLE users (id INTEGER PRIMARY KEY, name VARCHAR(16), email VARCHAR(100))")
         
-        var user = User(id: .number(.integer(1)), name: "Vapor", email: "vapor@qutheory.io")
+        var user = User(id: .number(.int(1)), name: "Vapor", email: "vapor@qutheory.io")
         User.database = database
         
         try user.save()
