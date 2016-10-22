@@ -23,6 +23,7 @@ class SchemaTests: XCTestCase {
         var int: Int
         var stringDefault: String
         var string64: String
+        var stringOptional: String?
         var double: Double
         var bool: Bool
         var data: [UInt8]
@@ -31,6 +32,7 @@ class SchemaTests: XCTestCase {
             int: Int,
             stringDefault: String,
             string64: String,
+            stringOptional: String?,
             double: Double,
             bool: Bool,
             data: [UInt8]
@@ -38,6 +40,7 @@ class SchemaTests: XCTestCase {
             self.int = int
             self.stringDefault = stringDefault
             self.string64 = string64
+            self.stringOptional = stringOptional
             self.double = double
             self.bool = bool
             self.data = data
@@ -48,6 +51,7 @@ class SchemaTests: XCTestCase {
             int = try node.extract("int")
             stringDefault = try node.extract("string_default")
             string64 = try node.extract("string_64")
+            stringOptional = try node.extract("string_optional")
             double = try node.extract("double")
             bool = try node.extract("bool")
             data = try node.extract("data")
@@ -59,8 +63,10 @@ class SchemaTests: XCTestCase {
                 "int": int,
                 "string_default": stringDefault,
                 "string_64": string64,
+                "string_optional": stringOptional,
                 "double": double,
                 "bool": bool,
+                "string_optional": stringOptional,
                 "data": Node(node: data)
             ])
         }
@@ -71,6 +77,7 @@ class SchemaTests: XCTestCase {
                 builder.int("int")
                 builder.string("string_default")
                 builder.string("string_64", length: 64)
+                builder.string("string_optional", optional: true)
                 builder.double("double")
                 builder.bool("bool")
                 builder.data("data")
@@ -100,6 +107,7 @@ class SchemaTests: XCTestCase {
             int: 42,
             stringDefault: "this is a default",
             string64: "< 64 bytes",
+            stringOptional: nil,
             double: 3.14,
             bool: false,
             data: [0x04, 0x02]
@@ -110,5 +118,9 @@ class SchemaTests: XCTestCase {
         } catch {
             XCTFail("Could not save: \(error)")
         }
+        
+        let test2 = try SchemaTester.query().filter("string_optional", Node.null).first()
+        XCTAssertNotNil(test2)
+        XCTAssertEqual(test.id, test2!.id)
     }
 }
