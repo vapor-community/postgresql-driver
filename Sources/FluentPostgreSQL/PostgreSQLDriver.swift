@@ -57,18 +57,22 @@ public class PostgreSQLDriver: Fluent.Driver {
         switch query.action {
         case .create:
             // fetch the last inserted value
-            let lastval = try _execute("SELECT LASTVAL();", [], connection)
-
-            // check if it contains an id
-            if let id = lastval[0, "lastval"]?.int {
-                // return the id to fluent to
-                // be the model's new id
-                return .number(.int(id))
-            } else {
-                // no id found, return whatever
-                // the results are
-                return result
+            do {
+                let lastval = try _execute("SELECT LASTVAL();", [], connection)
+                // check if it contains an id
+                if let id = lastval[0, "lastval"]?.int {
+                    // return the id to fluent to
+                    // be the model's new id
+                    return .number(.int(id))
+                }
             }
+            catch PostgreSQL.DatabaseError.invalidSQL(message: _) {
+                // When receiving a invalidSQL error, there is basically no LASTVAL, so ignore.
+            }
+
+            // no id found, return whatever
+            // the results are
+            return result
         default:
             // return the results of the query
             return result
