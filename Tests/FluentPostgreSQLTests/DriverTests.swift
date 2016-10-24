@@ -4,7 +4,8 @@ import Fluent
 
 class DriverTests: XCTestCase {
     static let allTests = [
-        ("testSaveAndFind", testSaveAndFind)
+        ("testSaveAndFind", testSaveAndFind),
+        ("testPresetID", testPresetID),
     ]
 
     var database: Fluent.Database!
@@ -44,5 +45,20 @@ class DriverTests: XCTestCase {
         } catch {
             XCTFail("User should not exist: \(error)")
         }
+    }
+    
+    func testPresetID() throws {
+        try driver.raw("DROP TABLE IF EXISTS users")
+        try driver.raw("CREATE TABLE users (id INTEGER PRIMARY KEY, name VARCHAR(16), email VARCHAR(100))")
+        
+        var user = User(id: .number(.int(1)), name: "Vapor", email: "vapor@qutheory.io")
+        User.database = database
+        
+        try user.save()
+        
+        let found = try User.find(1)
+        XCTAssertEqual(found?.id!, 1)
+        XCTAssertEqual(found?.name, user.name)
+        XCTAssertEqual(found?.email, user.email)
     }
 }
