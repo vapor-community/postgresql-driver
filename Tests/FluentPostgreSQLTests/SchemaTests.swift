@@ -26,7 +26,7 @@ class SchemaTests: XCTestCase {
         var stringOptional: String?
         var double: Double
         var bool: Bool
-        var data: [UInt8]?
+        var data: [UInt8]
 
         init(
             int: Int,
@@ -35,7 +35,7 @@ class SchemaTests: XCTestCase {
             stringOptional: String?,
             double: Double,
             bool: Bool,
-            data: [UInt8]?
+            data: [UInt8]
         ) {
             self.int = int
             self.stringDefault = stringDefault
@@ -66,7 +66,7 @@ class SchemaTests: XCTestCase {
                 "string_optional": stringOptional,
                 "double": double,
                 "bool": bool,
-                "data": data != nil ? Node(node: data!) : Node.null
+                "data": Node(node: data)
             ])
         }
 
@@ -79,7 +79,7 @@ class SchemaTests: XCTestCase {
                 builder.string("string_optional", optional: true)
                 builder.double("double")
                 builder.bool("bool")
-                builder.data("data", optional: true)
+                builder.data("data")
             }
         }
         static func revert(_ database: Database) throws {
