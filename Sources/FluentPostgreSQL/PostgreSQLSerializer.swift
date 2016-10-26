@@ -131,4 +131,12 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
 
         return statement.joined(separator: " ")
     }
+    
+    public override func sql(_ tableAction: SQL.TableAction, _ table: String) -> String {
+        var sql = super.sql(tableAction, table)
+        if case .drop = tableAction {
+            sql += " CASCADE"
+        }
+        return sql
+    }
 }
