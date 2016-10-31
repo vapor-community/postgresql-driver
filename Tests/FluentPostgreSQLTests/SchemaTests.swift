@@ -109,7 +109,7 @@ class SchemaTests: XCTestCase {
             stringOptional: nil,
             double: 3.14,
             bool: false,
-            data: [0x04, 0x02]
+            data: [0x04, 0x02, 0xFF]
         )
 
         do {
