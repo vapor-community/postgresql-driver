@@ -54,7 +54,11 @@ class SchemaTests: XCTestCase {
             stringOptional = try node.extract("string_optional")
             double = try node.extract("double")
             bool = try node.extract("bool")
-            data = try node.extract("data")
+            
+            guard let dataNode = node["data"], case .bytes(let dataBytes) = dataNode else {
+                throw NodeError.unableToConvert(node: nil, expected: "Node.bytes")
+            }
+            data = dataBytes
         }
 
         func makeNode(context: Context) throws -> Node {
@@ -66,7 +70,7 @@ class SchemaTests: XCTestCase {
                 "string_optional": stringOptional,
                 "double": double,
                 "bool": bool,
-                "data": Node(node: data)
+                "data": Node(bytes: data),
             ])
         }
 
