@@ -18,10 +18,17 @@ class SerializerTests: XCTestCase {
         let serializer = PostgreSQLSerializer(sql: .insert(table: "test", data: input))
         let result = serializer.serialize()
 
-        XCTAssertEqual("INSERT INTO test (id, name) VALUES ($1, $2)", result.0)
-        XCTAssertEqual(2, result.1.count)
-        XCTAssertEqual(Node.string("foo"), result.1.first ?? Node.null)
-        XCTAssertEqual(Node.string("bar"), result.1.last ?? Node.null)
+        if "INSERT INTO test (id, name) VALUES ($1, $2)" == result.0 {
+            XCTAssertEqual(2, result.1.count)
+            XCTAssertEqual(Node.string("foo"), result.1.first ?? Node.null)
+            XCTAssertEqual(Node.string("bar"), result.1.last ?? Node.null)
+        } else if "INSERT INTO test (name, id) VALUES ($1, $2)" == result.0 {
+            XCTAssertEqual(2, result.1.count)
+            XCTAssertEqual(Node.string("bar"), result.1.first ?? Node.null)
+            XCTAssertEqual(Node.string("foo"), result.1.last ?? Node.null)
+        } else {
+            XCTFail("serialize() returned an unexpected SQL statement: \(result.0)")
+        }
     }
     
     func testSerializerInsertRemovesNullID() throws {
