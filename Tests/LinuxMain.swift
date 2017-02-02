@@ -7,6 +7,7 @@ XCTMain([
     testCase(DriverTests.allTests),
     testCase(JoinTests.allTests),
     testCase(SchemaTests.allTests),
+    testCase(SerializerTests.allTests)
 ])
 
 #endif

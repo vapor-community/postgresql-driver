@@ -104,7 +104,7 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
         // Differs from Fluent implementation
         // Removes idKey value
         // The idKey needs to be blank when inserting a record
-        if (dict["id"]?.isNull)! {
+        if dict["id"]?.isNull ?? false {
             dict.removeValue(forKey: "id")
         }
 
