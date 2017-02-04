@@ -70,11 +70,11 @@ public class PostgreSQLDriver: Fluent.Driver {
                 // When receiving a invalidSQL error, there is basically no LASTVAL, so ignore.
             }
             
-            // return the value of the 'id' field from the successfully inserted record 
+            // return the value against the primary key from the successfully inserted record
             // if we failed to get it via LASTVAL above (which would fail at least for non-integral primary keys).
             switch query.sql {
             case .insert(_, let data):
-                if let id = data?["id"] {
+                if let id = data?[self.idKey] {
                     return id
                 }
             default: ()
