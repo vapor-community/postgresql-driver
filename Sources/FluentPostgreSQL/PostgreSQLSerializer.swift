@@ -19,14 +19,19 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
 
     public override func sql(_ type: Schema.Field.DataType) -> String {
         switch type {
-        case .id:
-            return "SERIAL PRIMARY KEY"
-        case .string(let length):
-            if let length = length {
-                return "VARCHAR(\(length))"
-            } else {
-                return "VARCHAR(255)"
+        case .id(let keyType):
+            switch keyType ?? Schema.Field.KeyType.int {
+            case .int:
+                return "SERIAL PRIMARY KEY"
+                
+            case .string(let length):
+                return "VARCHAR(\(length ?? 255)) PRIMARY KEY"
+                
+            case .custom(let customType):
+                return "\(customType) PRIMARY KEY"
             }
+        case .string(let length):
+            return "VARCHAR(\(length ?? 255))"
         case .double:
             return "FLOAT"
         case .data:
