@@ -3,7 +3,7 @@ import PostgreSQL
 
 public class PostgreSQLDriver: Fluent.Driver {
     
-    public static var idKey: String = "id"
+    internal static let idKey: String = "id"
     public var idKey: String = PostgreSQLDriver.idKey
     public var database: PostgreSQL.Database
 
