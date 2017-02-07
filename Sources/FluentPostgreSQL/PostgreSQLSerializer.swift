@@ -2,10 +2,18 @@ import Fluent
 
 public final class PostgreSQLSerializer: GeneralSQLSerializer {
     var positionalParameter: Int = 0
-
+    
     public override func serialize() -> (String, [Node]) {
         self.positionalParameter = 0
-        return super.serialize()
+        
+        let serialized = super.serialize()
+        
+        switch sql {
+        case .insert:
+            return (serialized.0 + " RETURNING \(PostgreSQLDriver.idKey)", serialized.1)
+        default:
+            return serialized
+        }
     }
 
     public override func sql(_ value: Node) -> String {
