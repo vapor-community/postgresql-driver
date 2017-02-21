@@ -4,7 +4,7 @@ import PostgreSQL
 public class PostgreSQLDriver: Fluent.Driver {
     
     internal static let idKey: String = "id"
-    public var idKey: String = PostgreSQLDriver.idKey
+    public let idKey: String = PostgreSQLDriver.idKey
     public var database: PostgreSQL.Database
 
     /**
@@ -58,7 +58,7 @@ public class PostgreSQLDriver: Fluent.Driver {
 
         switch query.action {
         case .create:
-            return (result[idKey]?.array as? [Node])?.first ?? result
+            return result[idKey]?.nodeArray?.first ?? result
         default:
             // return the results of the query
             return result
