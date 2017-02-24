@@ -4,7 +4,8 @@ import Fluent
 
 class SchemaTests: XCTestCase {
     static let allTests = [
-        ("testBasic", testBasic)
+        ("testBasic", testBasic),
+        ("testStringID", testStringID)
     ]
 
     var database: Fluent.Database!
@@ -125,5 +126,73 @@ class SchemaTests: XCTestCase {
         let test2 = try SchemaTester.query().filter("string_optional", Node.null).first()
         XCTAssertNotNil(test2)
         XCTAssertEqual(test.id, test2!.id)
+    }
+    
+    // given for now the 'id' DataType is interpreted as an int by the PostgreSQL driver,
+    // creating a String typed id requires using the custom datat type.
+    final class StringIDTester: Entity {
+        var exists: Bool = false
+        static var entity = "string_id_tests"
+        
+        var id: Node?
+        
+        init(id: String) {
+            self.id = Node(id)
+        }
+        
+        init(node: Node, in context: Context) throws {
+            id = try node.extract("id")
+        }
+        
+        func makeNode(context: Context) throws -> Node {
+            return try Node(node: [ "id": id ])
+        }
+        
+        static func prepare(_ database: Database) throws {
+            try database.create(entity) { builder in
+                builder.custom("id", type: "char(36) primary key")
+            }
+        }
+        static func revert(_ database: Database) throws {
+            try database.delete(entity)
+        }
+    }
+    
+    func testStringID() throws {
+        StringIDTester.database = database
+        
+        do {
+            try StringIDTester.revert(database)
+        } catch {
+            XCTFail("Could not revert database: \(error)")
+        }
+        
+        do {
+            try StringIDTester.prepare(database)
+        } catch {
+            XCTFail("Could not prepare database: \(error)")
+        }
+        
+        do {
+            var test = StringIDTester(id: "derp")
+            try test.save()
+            XCTAssertNotNil(try StringIDTester.find("derp"))
+        }
+        catch {
+            XCTFail("Could not save to database: \(error)")
+        }
+        
+        do {
+            let createdObject = try StringIDTester
+                                    .query()
+                                    .create(Node(["id": "123456789012345678901234567890123456"]))
+            
+            print(createdObject)
+            
+            XCTAssertEqual(createdObject.string, "123456789012345678901234567890123456")
+
+        } catch {
+            XCTFail("Could not save: \(error)")
+        }
     }
 }

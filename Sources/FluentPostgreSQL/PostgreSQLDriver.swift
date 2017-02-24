@@ -2,7 +2,9 @@ import Fluent
 import PostgreSQL
 
 public class PostgreSQLDriver: Fluent.Driver {
-    public var idKey: String = "id"
+    
+    internal static let idKey: String = "id"
+    public let idKey: String = PostgreSQLDriver.idKey
     public var database: PostgreSQL.Database
 
     /**
@@ -56,23 +58,7 @@ public class PostgreSQLDriver: Fluent.Driver {
 
         switch query.action {
         case .create:
-            // fetch the last inserted value
-            do {
-                let lastval = try _execute("SELECT LASTVAL();", [], connection)
-                // check if it contains an id
-                if let id = lastval[0, "lastval"]?.int {
-                    // return the id to fluent to
-                    // be the model's new id
-                    return .number(.int(id))
-                }
-            }
-            catch PostgreSQL.DatabaseError.invalidSQL(message: _) {
-                // When receiving a invalidSQL error, there is basically no LASTVAL, so ignore.
-            }
-
-            // no id found, return whatever
-            // the results are
-            return result
+            return result[idKey]?.nodeArray?.first ?? result
         default:
             // return the results of the query
             return result
