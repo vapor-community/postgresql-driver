@@ -39,6 +39,8 @@ public final class PostgreSQLSerializer: GeneralSQLSerializer {
             return "FLOAT"
         case .data:
             return "BYTEA"
+        case .timestamp:
+            return "TIMESTAMP"
         default:
             break
         }
