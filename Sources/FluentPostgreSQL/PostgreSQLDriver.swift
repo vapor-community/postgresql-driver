@@ -1,100 +1,134 @@
 import Fluent
 import PostgreSQL
+import Random
 
-public class PostgreSQLDriver: Fluent.Driver {
-    
-    internal static let idKey: String = "id"
-    public let idKey: String = PostgreSQLDriver.idKey
-    public var database: PostgreSQL.Database
+public final class Driver: Fluent.Driver {
+    // The string value for the default identifier key.
+    //
+    // The `idKey` will be used when `Model.find(_:)` or other find by
+    // identifier methods are used.
+    //
+    // This value is overriden by entities that implement the `Entity.idKey`
+    // static property.
+    public let idKey: String
 
-    /**
-        Attempts to establish a connection to a PostgreSQL database engine.
-        - host: May be either a host name or an IP address. Default is "localhost".
-        - port: Port number for the TCP/IP connection. Default is 5432. Can't be 0.
-        - dbname: Name of PostgreSQL database.
-        - user: Login ID of the PostgreSQL user.
-        - password: Password for user.
-        - throws: `Error.cannotEstablishConnection` if the call to connection fails.
-    */
-    public init(
-        host: String = "localhost",
+    // The default type for values stored against the identifier key.
+    //
+    // The `idType` will be accessed by those Entity implementations
+    // which do not themselves implement `Entity.idType`.
+    public let idType: IdentifierType
+
+    // The naming convetion to use for foreign id keys, table names, etc.
+    // ex: snake_case vs. camelCase.
+    public let keyNamingConvention: KeyNamingConvention
+
+    // The master MySQL Database for read/write
+    public let master: PostgreSQL.Database
+
+    // The read replicas for read only
+    public let readReplicas: [PostgreSQL.Database]
+
+    // Stores query logger
+    public var log: QueryLogCallback?
+
+    // Attempts to establish a connection to a PostgreSQL database engine
+    // running on host.
+    //
+    // - parameter masterHostname: May be either a host name or an IP address.
+    //         Defaults to "localhost".
+    // - parameter user: The PostgreSQL login ID.
+    // - parameter password: Password for user.
+    // - parameter database: Database name.
+    //         The connection sets the default database to this value.
+    // - parameter port: If port is not 0, the value is used as
+    //         the port number for the TCP/IP connection.
+    // - parameter socket: If socket is not NULL, the string specifies
+    //         the socket or named pipe to use.
+    // - parameter encoding: Usually "utf8".
+    //
+    // - throws: `Error.connection(String)` if the call to connection fails.
+    //
+    public convenience init(
+        masterHostname: String = "localhost",
+        readReplicaHostnames: [String],
         port: Int = 5432,
-        dbname: String,
+        database: String,
         user: String,
-        password: String
-    ) {
-
-        self.database = PostgreSQL.Database(
-            host: host,
-            port: "\(port)",
-            dbname: dbname,
+        password: String,
+        encoding: String = "UTF8",
+        idKey: String = "id",
+        idType: IdentifierType = .int,
+        keyNamingConvention: KeyNamingConvention = .snake_case
+    ) throws {
+        let master = try PostgreSQL.Database(
+            hostname: masterHostname,
+            port: port,
+            database: database,
             user: user,
             password: password
         )
-    }
-
-    /**
-        Creates the driver from an already initialized database.
-    */
-    public init(_ database: PostgreSQL.Database) {
-        self.database = database
-    }
-
-    /**
-        Queries the database.
-    */
-    @discardableResult
-    public func query<T: Entity>(_ query: Query<T>) throws -> Node {
-        let serializer = PostgreSQLSerializer(sql: query.sql)
-        let (statement, values) = serializer.serialize()
-
-        // create a connection in case it
-        // needs to be used twice to fetch
-        // data about the query
-        let connection = try database.makeConnection()
-
-        // execute the main statement
-        let result = try _execute(statement, values, connection)
-
-        switch query.action {
-        case .create:
-            return result[idKey]?.nodeArray?.first ?? result
-        default:
-            // return the results of the query
-            return result
+        let readReplicas: [PostgreSQL.Database] = try readReplicaHostnames.map { hostname in
+            return try PostgreSQL.Database(
+                hostname: hostname,
+                port: port,
+                database: database,
+                user: user,
+                password: password
+            )
         }
+        self.init(
+            master: master,
+            readReplicas: readReplicas,
+            idKey: idKey,
+            idType: idType,
+            keyNamingConvention: keyNamingConvention
+        )
     }
 
-    /**
-        Creates the desired schema.
-    */
-    public func schema(_ schema: Schema) throws {
-        let serializer = PostgreSQLSerializer(sql: schema.sql)
-        let (statement, values) = serializer.serialize()
-
-        _ = try _execute(statement, values)
+    // Creates the driver from an already initialized database.
+    public init(
+        master: PostgreSQL.Database,
+        readReplicas: [PostgreSQL.Database] = [],
+        idKey: String = "id",
+        idType: IdentifierType = .int,
+        keyNamingConvention: KeyNamingConvention = .snake_case
+    ) {
+        self.master = master
+        self.readReplicas = readReplicas
+        self.idKey = idKey
+        self.idType = idType
+        self.keyNamingConvention = keyNamingConvention
     }
 
-    /**
-        Provides access to the underlying PostgreSQL database for running raw queries.
-    */
-    @discardableResult
-    public func raw(_ raw: String, _ values: [Node]) throws -> Node {
-        return try _execute(raw, values)
-    }
-
-    // MARK: Private
-
-    private func _execute(_ raw: String, _ values: [Node] = [], _ conn: Connection? = nil) throws -> Node {
-        let connection: Connection
-
-        if let c = conn {
-            connection = c
-        } else {
-            connection = try database.makeConnection()
+    // Creates a connection for executing queries. This method is used to
+    // automatically create a connection if any Executor methods are called on
+    // the Driver.
+    public func makeConnection(_ type: ConnectionType) throws -> Fluent.Connection {
+        let database: PostgreSQL.Database
+        switch type {
+        case .read:
+            database = readReplicas.random ?? master
+        case .readWrite:
+            database = master
         }
-
-        let result = try database.execute(raw, values, on: connection).map { Node.object($0) }
-        return .array(result)
+        let conn = try database.makeConnection()
+        return Connection(conn)
     }
 }
+
+// extension Driver {
+//     // Executes a PostgreSQL transaction on a single connection.
+//     //
+//     // The argument supplied to the closure is the connection to use for
+//     // this transaction.
+//     //
+//     // It may be ignored if you are using Fluent and not performing
+//     // complex threading.
+//     public func transaction(_ closure: (PostgreSQL.Connection) throws -> ()) throws {
+//         let conn = try master.makeConnection()
+//         try conn.transaction {
+//             let wrapped = PostgreSQLDriver.Connection(conn)
+//             try closure(wrapped)
+//         }
+//     }
+// }
