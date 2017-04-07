@@ -1,13 +1,10 @@
 #if os(Linux)
 
 import XCTest
-@testable import FluentPostgreSQLTests
+@testable import PostgreSQLDriverTests
 
 XCTMain([
-    testCase(DriverTests.allTests),
-    testCase(JoinTests.allTests),
-    testCase(SchemaTests.allTests),
-    testCase(SerializerTests.allTests)
+    testCase(FluentMySQLTests.allTests)
 ])
 
 #endif
