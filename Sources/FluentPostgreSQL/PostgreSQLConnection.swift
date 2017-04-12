@@ -3,7 +3,7 @@ import PostgreSQL
 
 public final class Connection: Fluent.Connection {
     public let postgresqlConnection: PostgreSQL.Connection
-    public var log: QueryLogCallback?
+    public var queryLogger: QueryLogger?
     public var isClosed: Bool {
         return !postgresqlConnection.isConnected
     }
@@ -48,11 +48,11 @@ public final class Connection: Fluent.Connection {
 
     @discardableResult
     private func postgresql(_ query: String, _ values: [Node] = []) throws -> Node {
-        log(query, values)
+        queryLogger?.log(query, values)
         do {
             return try postgresqlConnection.execute(
                 query,
-                values as [NodeRepresentable]
+                values
             )
         } catch let error as PostgreSQLError
             where

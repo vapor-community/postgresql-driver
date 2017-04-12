@@ -29,7 +29,7 @@ public final class Driver: Fluent.Driver {
     public let readReplicas: [PostgreSQL.Database]
 
     // Stores query logger
-    public var log: QueryLogCallback?
+    public var queryLogger: QueryLogger?
 
     // Attempts to establish a connection to a PostgreSQL database engine
     // running on host.
@@ -112,7 +112,8 @@ public final class Driver: Fluent.Driver {
             database = master
         }
         let conn = try database.makeConnection()
-        return Connection(conn)
+        conn.queryLogger = queryLogger
+        return conn
     }
 }
 
@@ -128,6 +129,7 @@ public final class Driver: Fluent.Driver {
 //         let conn = try master.makeConnection()
 //         try conn.transaction {
 //             let wrapped = PostgreSQLDriver.Connection(conn)
+//             wrapped.queryLogger = self.queryLogger
 //             try closure(wrapped)
 //         }
 //     }
