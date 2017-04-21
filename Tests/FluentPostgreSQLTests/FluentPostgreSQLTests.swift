@@ -14,34 +14,34 @@ class FluentPostgreSQLTests: XCTestCase {
         let tester = Tester(database: database)
 
         do {
-            try tester.testAll()
+          try tester.testAll()
         } catch {
             XCTFail("\(error)")
         }
     }
 
     func testForeignKey() throws {
-//        let driver = FluentPostgreSQL.Driver.makeTestConnection()
-//        let database = Database(driver)
-//
-//        defer {
-//            try! database.delete(Atom.self)
-//            try! database.delete(Compound.self)
-//        }
-//
-//        try database.create(Compound.self) { compounds in
-//            compounds.id(for: Compound.self)
-//            compounds.string("foo")
-//            compounds.index("foo")
-//        }
-//        try database.index("foo", for: Compound.self)
-//
-//        try database.create(Atom.self) { atoms in
-//            atoms.id(for: Atom.self)
-//            atoms.string("name")
-//            atoms.index("name")
-//            atoms.foreignKey("name", references: "foo", on: Compound.self)
-//        }
+       let driver = FluentPostgreSQL.Driver.makeTestConnection()
+       let database = Database(driver)
+
+       defer {
+           try! database.delete(Atom.self)
+           try! database.delete(Compound.self)
+       }
+
+       try database.create(Compound.self) { compounds in
+           compounds.id()
+           compounds.string("foo")
+           compounds.index("foo")
+       }
+       try database.index("foo", for: Compound.self)
+
+       try database.create(Atom.self) { atoms in
+           atoms.id()
+           atoms.string("name")
+           atoms.index("name")
+           atoms.foreignKey("name", references: "foo", on: Compound.self)
+       }
 //        try database.index("name", for: Atom.self)
     }
 }
