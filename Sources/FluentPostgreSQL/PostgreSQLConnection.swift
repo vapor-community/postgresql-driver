@@ -52,7 +52,7 @@ public final class Connection: Fluent.Connection {
         do {
             return try postgresqlConnection.execute(
                 query,
-                values
+                values as [NodeRepresentable]
             )
         } catch let error as PostgreSQLError
             where

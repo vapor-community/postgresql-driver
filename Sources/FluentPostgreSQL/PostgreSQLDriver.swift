@@ -111,7 +111,7 @@ public final class Driver: Fluent.Driver {
         case .readWrite:
             database = master
         }
-        let conn = try database.makeConnection()
+        let conn = try Connection(database.makeConnection())
         conn.queryLogger = queryLogger
         return conn
     }
