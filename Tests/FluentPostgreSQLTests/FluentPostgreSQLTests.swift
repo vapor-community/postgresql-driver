@@ -32,16 +32,16 @@ class FluentPostgreSQLTests: XCTestCase {
        try database.create(Compound.self) { compounds in
            compounds.id()
            compounds.string("foo")
-           compounds.index("foo")
        }
+
        try database.index("foo", for: Compound.self)
 
        try database.create(Atom.self) { atoms in
            atoms.id()
            atoms.string("name")
-           atoms.index("name")
            atoms.foreignKey("name", references: "foo", on: Compound.self)
        }
-//        try database.index("name", for: Atom.self)
+
+        try database.index("name", for: Atom.self)
     }
 }
