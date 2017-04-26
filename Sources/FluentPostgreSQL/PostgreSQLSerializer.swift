@@ -38,7 +38,7 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
         case .bytes:
             return "BYTEA"
         case .date:
-            return "DATETIME"
+            return "TIMESTAMP"
         case .custom(let type):
             return type
         }
