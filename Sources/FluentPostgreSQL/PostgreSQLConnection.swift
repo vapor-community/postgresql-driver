@@ -31,15 +31,7 @@ public final class Connection: Fluent.Connection {
             let results = try postgresql(statement, values)
 
             if query.action == .create {
-                let insert = try postgresql("SELECT LAST_INSERT_ID() as id", [])
-                if
-                    case .array(let array) = insert.wrapped,
-                    let first = array.first,
-                    case .object(let obj) = first,
-                    let id = obj["id"]
-                {
-                    return Node(id, in: insert.context)
-                }
+                return results.array?[0].object?[E.idKey] ?? Node.null
             }
 
             return results
