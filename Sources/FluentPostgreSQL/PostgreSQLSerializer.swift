@@ -2,6 +2,13 @@ import Fluent
 
 // PostgreSQL flavored SQL serializer.
 public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
+    private var positionalIndex = 0
+
+    public override func serialize() -> (String, [Node]) {
+        positionalIndex = 0
+        return super.serialize()
+    }
+
     public override func type(_ type: Field.DataType, primaryKey: Bool) -> String {
         switch type {
         case .id(let type):
@@ -99,26 +106,6 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
         )
     }
 
-    public override func values(_ values: [RawOr<Node>]) -> (String, [Node]) {
-        var v: [Node] = []
-        
-        let parsed: [String] = values.enumerated().map { index, value in
-            switch value {
-            case .raw(let string, _):
-                return string
-            case .some(let some):
-                v.append(some)
-                return "$\(index + 1)"
-            }
-        }
-        
-        let string = parsed.joined(separator: ", ")
-        return (
-            "(" + string + ")",
-            v
-        )
-    }
-
     public override func limit(_ limit: RawOr<Limit>) -> String {
         var statement: [String] = []
         
@@ -131,5 +118,14 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
         }
         
         return statement.joined(separator: " ")
+    }
+    
+    public override func placeholder(_ value: Node) -> String {
+        return nextPlaceholder
+    }
+    
+    private var nextPlaceholder: String {
+        positionalIndex += 1
+        return "$\(positionalIndex)"
     }
 }
