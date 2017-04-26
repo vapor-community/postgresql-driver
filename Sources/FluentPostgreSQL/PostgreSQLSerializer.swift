@@ -63,4 +63,8 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
             []
         )
     }
+
+    public override func escape(_ string: String) -> String {
+        return "\"\(string)\""
+    }
 }
