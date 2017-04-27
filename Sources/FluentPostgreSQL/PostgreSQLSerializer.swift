@@ -6,15 +6,7 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
 
     public override func serialize() -> (String, [Node]) {
         positionalIndex = 0
-
-        let serialized = super.serialize()
-        
-        switch query.action {
-        case .create:
-            return (serialized.0 + " RETURNING \(E.idKey)", serialized.1)
-        default:
-            return serialized
-        }
+        return super.serialize()
     }
 
     public override func type(_ type: Field.DataType, primaryKey: Bool) -> String {
