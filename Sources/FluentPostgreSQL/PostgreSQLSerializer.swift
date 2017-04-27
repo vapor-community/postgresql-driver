@@ -1,150 +1,204 @@
 import Fluent
 
-public final class PostgreSQLSerializer: GeneralSQLSerializer {
-    var positionalParameter: Int = 0
-    
+// PostgreSQL flavored SQL serializer.
+public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
+    private var positionalIndex = 0
+
     public override func serialize() -> (String, [Node]) {
-        self.positionalParameter = 0
-        
-        let serialized = super.serialize()
-        
-        switch sql {
-        case .insert:
-            return (serialized.0 + " RETURNING \(PostgreSQLDriver.idKey)", serialized.1)
-        default:
-            return serialized
-        }
+        positionalIndex = 0
+        return super.serialize()
     }
 
-    public override func sql(_ value: Node) -> String {
-        self.positionalParameter += 1
-        return "$\(self.positionalParameter)"
-    }
-
-    public override func sql(_ string: String) -> String {
-        return "\(string)"
-    }
-
-    public override func sql(_ type: Schema.Field.DataType) -> String {
+    public override func type(_ type: Field.DataType, primaryKey: Bool) -> String {
         switch type {
-        case .id:
-            return "SERIAL PRIMARY KEY"
-        case .string(let length):
-            if let length = length {
-                return "VARCHAR(\(length))"
-            } else {
-                return "VARCHAR(255)"
+        case .id(let type):
+            let typeString: String
+            switch type {
+            case .int:
+                if primaryKey {
+                    typeString = "SERIAL PRIMARY KEY"
+                } else {
+                    typeString = "INT"
+                }
+            case .uuid:
+                if primaryKey {
+                    typeString = "UUID PRIMARY KEY"
+                } else {
+                    typeString = "UUID"
+                }
+            case .custom(let custom):
+                typeString = custom
             }
+            return typeString
+        case .int:
+            return "INT"
+        case .string:
+            return "TEXT"
         case .double:
             return "FLOAT"
-        case .data:
+        case .bool:
+            return "BOOLEAN"
+        case .bytes:
             return "BYTEA"
-        default:
-            break
+        case .date:
+            return "TIMESTAMP"
+        case .custom(let type):
+            return type
         }
-        return super.sql(type)
     }
 
-    public override func sql(_ filter: Filter) -> (String, [Node]) {
+    public override func deleteIndex(_ idx: RawOr<Index>) -> (String, [Node]) {
+        var statement: [String] = []
+
+        statement.append("ALTER TABLE")
+        statement.append(escape(E.entity))
+        statement.append("DROP INDEX")
+
+        switch idx {
+        case .raw(let raw, _):
+            statement.append(raw)
+        case .some(let idx):
+            statement.append(escape(idx.name))
+        }
+
+        return (
+            concatenate(statement),
+            []
+        )
+    }
+
+    public override func escape(_ string: String) -> String {
+        return "\"\(string)\""
+    }
+
+    public override func insert() -> (String, [Node]) {
+        var statement: [String] = []
+        
+        statement += "INSERT INTO"
+        statement += escape(E.entity)
+        
+        let bind: [Node]
+        
+        // Remove ID from the query data to avoid constraint violation error
+        var data = query.data
+        data.removeValue(forKey: .some(E.idKey))
+        
+        if !data.isEmpty {
+            statement += keys(data.keys.array)
+            statement += "VALUES"
+            let (fragment, nodes) = values(data.values.array)
+            statement += fragment
+            bind = nodes
+        } else {
+            bind = []
+        }
+        
+        statement += "RETURNING"
+        statement += E.idKey
+        
+        return (
+            concatenate(statement),
+            bind
+        )
+    }
+
+    public override func drop() -> (String, [Node]) {
+        var statement: [String] = []
+
+        statement += "DROP TABLE IF EXISTS"
+        statement += escape(E.entity)
+        statement += "CASCADE" // added for PostgreSQL
+
+        return (
+            concatenate(statement),
+            []
+        )
+    }
+
+    public override func limit(_ limit: RawOr<Limit>) -> String {
+        var statement: [String] = []
+        
+        statement += "LIMIT"
+        switch limit {
+        case .raw(let raw, _):
+            statement += raw
+        case .some(let some):
+            statement += "\(some.count) OFFSET \(some.offset)"
+        }
+        
+        return statement.joined(separator: " ")
+    }
+
+    public override func filter(_ filter: Filter) -> (String, [Node]) {
         var statement: [String] = []
         var values: [Node] = []
 
         switch filter.method {
-        case .compare(let key, let comparison, let value):
+        case .compare(let key, let c, let value):
             // `.null` needs special handling in the case of `.equals` or `.notEquals`.
-            if comparison == .equals && value == .null {
-                statement += "\(sql(filter.entity.entity)).\(sql(key)) IS NULL"
+            if c == .equals && value == .null {
+                statement += escape(filter.entity.entity) + "." + escape(key) + " IS NULL"
             }
-            else if comparison == .notEquals && value == .null {
-                statement += "\(sql(filter.entity.entity)).\(sql(key)) IS NOT NULL"
+            else if c == .notEquals && value == .null {
+                statement += escape(filter.entity.entity) + "." + escape(key) + " IS NOT NULL"
             }
             else {
-                self.positionalParameter += 1
+                // Augment pos
+                self.positionalIndex += 1
 
-                statement += "\(sql(filter.entity.entity)).\(sql(key))"
-                statement += sql(comparison)
-                // Use the positionalParameter instead of "?"
-                statement += "$\(self.positionalParameter)"
+                statement += escape(filter.entity.entity) + "." + escape(key)
+                statement += comparison(c)
+                // Use the positionalIndex instead of "?"
+                statement += "$\(self.positionalIndex)"
 
-                /**
-                    `.like` comparison operator requires additional
-                    processing of `value`
-                */
-                switch comparison {
+                // `.like` comparison operator requires additional
+                // processing of `value`
+                switch c {
                 case .hasPrefix:
-                    values += sql(hasPrefix: value)
+                    values += hasPrefix(value)
                 case .hasSuffix:
-                    values += sql(hasSuffix: value)
+                    values += hasSuffix(value)
                 case .contains:
-                    values += sql(contains: value)
+                    values += contains(value)
                 default:
                     values += value
                 }
             }
-        case .subset(let key, let scope, let subValues):
-            statement += "\(sql(filter.entity.entity)).\(sql(key))"
-            statement += sql(scope)
-            statement += sql(subValues)
+        case .subset(let key, let s, let subValues):
+            statement += escape(filter.entity.entity) + "." + escape(key)
+            statement += scope(s)
+            statement += placeholders(subValues)
             values += subValues
-        case .group(let relation, let filters):
-            let (clause, subvals) = sql(filters, relation: relation)
-            statement += "(\(clause))"
-            values += subvals
+        case .group(let relation, let f):
+            if f.count == 0 {
+                // empty subqueries should result to false to protect
+                // unfiltered data from being returned
+                statement += "false"
+            } else {
+                let (clause, subvals) = filters(f, relation)
+                statement += "(\(clause))"
+                values += subvals
+            }
         }
 
         return (
-            sql(statement),
+            concatenate(statement),
             values
         )
     }
 
-    public override func sql(_ data: Node?) -> (String, [Node])? {
-        guard let node = data else {
-            return nil
-        }
-
-        guard case .object(var dict) = node else {
-            return nil
-        }
-
-        var clause: [String] = []
-
-        // Differs from Fluent implementation
-        // Removes idKey value
-        // The idKey needs to be blank when inserting a record
-        if dict["id"]?.isNull ?? false {
-            dict.removeValue(forKey: "id")
-        }
-
-        let keys = Array(dict.keys)
-        let values = Array(dict.values)
-
-        clause += sql(keys: keys)
-        clause += "VALUES"
-        clause += sql(values)
-
-        return (
-            sql(clause),
-            values
-        )
+    public override func placeholder(_ value: Node) -> String {
+        return nextPlaceholder
     }
 
-    public override func sql(limit: Limit) -> String {
-        var statement: [String] = []
-
-        statement += "LIMIT"
-        statement += "\(limit.count)"
-        statement += "OFFSET"
-        statement += "\(limit.offset)"
-
-        return statement.joined(separator: " ")
+    private var nextPlaceholder: String {
+        positionalIndex += 1
+        return "$\(positionalIndex)"
     }
-    
-    public override func sql(_ tableAction: SQL.TableAction, _ table: String) -> String {
-        var sql = super.sql(tableAction, table)
-        if case .drop = tableAction {
-            sql += " CASCADE"
-        }
-        return sql
-    }
+
+    // Not needed?
+    // public override func sql(_ string: String) -> String {
+    //     return "\(string)"
+    // }
+
 }
