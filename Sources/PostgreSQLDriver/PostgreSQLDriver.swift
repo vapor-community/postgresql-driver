@@ -51,10 +51,10 @@ public final class Driver: Fluent.Driver {
     public convenience init(
         masterHostname: String = "localhost",
         readReplicaHostnames: [String],
-        port: Int = 5432,
-        database: String,
         user: String,
         password: String,
+        database: String,
+        port: Int = 5432,
         encoding: String = "UTF8",
         idKey: String = "id",
         idType: IdentifierType = .int,
