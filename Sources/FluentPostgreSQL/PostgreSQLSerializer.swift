@@ -47,26 +47,6 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
         }
     }
 
-    public override func deleteIndex(_ idx: RawOr<Index>) -> (String, [Node]) {
-        var statement: [String] = []
-
-        statement.append("ALTER TABLE")
-        statement.append(escape(E.entity))
-        statement.append("DROP INDEX")
-
-        switch idx {
-        case .raw(let raw, _):
-            statement.append(raw)
-        case .some(let idx):
-            statement.append(escape(idx.name))
-        }
-
-        return (
-            concatenate(statement),
-            []
-        )
-    }
-
     public override func escape(_ string: String) -> String {
         return "\"\(string)\""
     }
