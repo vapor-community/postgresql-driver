@@ -48,9 +48,9 @@ public final class Connection: Fluent.Connection {
             )
         } catch let error as PostgreSQLError
             where
-                error.code == .connection_exception ||
-                error.code == .connection_does_not_exist ||
-                error.code == .connection_failure
+                error.code == .connectionException ||
+                error.code == .connectionDoesNotExist ||
+                error.code == .connectionFailure
         {
             throw QueryError.connectionClosed(error)
         }
