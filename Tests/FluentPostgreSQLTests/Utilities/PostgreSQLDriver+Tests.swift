@@ -1,10 +1,10 @@
-import FluentPostgreSQL
+import PostgreSQLDriver
 import PostgreSQL
 import Fluent
 import XCTest
 
-extension FluentPostgreSQL.Driver {
-    static func makeTestConnection() -> FluentPostgreSQL.Driver {
+extension PostgreSQLDriver.Driver {
+    static func makeTest() -> PostgreSQLDriver.Driver {
         do {
             let postgresql = try PostgreSQL.Database(
                 hostname: "127.0.0.1",
@@ -13,7 +13,7 @@ extension FluentPostgreSQL.Driver {
                 user: "postgres",
                 password: ""
             )
-            return FluentPostgreSQL.Driver(master: postgresql)
+            return PostgreSQLDriver.Driver(master: postgresql)
         } catch {
             print()
             print()

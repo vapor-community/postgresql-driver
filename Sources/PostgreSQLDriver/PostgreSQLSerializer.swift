@@ -8,69 +8,9 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
         positionalIndex = 0
         return super.serialize()
     }
-
-    public override func type(_ type: Field.DataType, primaryKey: Bool) -> String {
-        switch type {
-        case .id(let type):
-            let typeString: String
-            switch type {
-            case .int:
-                if primaryKey {
-                    typeString = "SERIAL PRIMARY KEY"
-                } else {
-                    typeString = "INT"
-                }
-            case .uuid:
-                if primaryKey {
-                    typeString = "UUID PRIMARY KEY"
-                } else {
-                    typeString = "UUID"
-                }
-            case .custom(let custom):
-                typeString = custom
-            }
-            return typeString
-        case .int:
-            return "INT"
-        case .string:
-            return "TEXT"
-        case .double:
-            return "FLOAT"
-        case .bool:
-            return "BOOLEAN"
-        case .bytes:
-            return "BYTEA"
-        case .date:
-            return "TIMESTAMP"
-        case .custom(let type):
-            return type
-        }
-    }
-
-    public override func deleteIndex(_ idx: RawOr<Index>) -> (String, [Node]) {
-        var statement: [String] = []
-
-        statement.append("ALTER TABLE")
-        statement.append(escape(E.entity))
-        statement.append("DROP INDEX")
-
-        switch idx {
-        case .raw(let raw, _):
-            statement.append(raw)
-        case .some(let idx):
-            statement.append(escape(idx.name))
-        }
-
-        return (
-            concatenate(statement),
-            []
-        )
-    }
-
-    public override func escape(_ string: String) -> String {
-        return "\"\(string)\""
-    }
-
+    
+    // MARK: Data
+    
     public override func insert() -> (String, [Node]) {
         var statement: [String] = []
         
@@ -101,6 +41,28 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
             bind
         )
     }
+    
+    // MARK: Schema
+
+    public override func deleteIndex(_ idx: RawOr<Index>) -> (String, [Node]) {
+        var statement: [String] = []
+
+        statement.append("ALTER TABLE")
+        statement.append(escape(E.entity))
+        statement.append("DROP INDEX")
+
+        switch idx {
+        case .raw(let raw, _):
+            statement.append(raw)
+        case .some(let idx):
+            statement.append(escape(idx.name))
+        }
+
+        return (
+            concatenate(statement),
+            []
+        )
+    }
 
     public override func drop() -> (String, [Node]) {
         var statement: [String] = []
@@ -114,6 +76,50 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
             []
         )
     }
+    
+    public override func type(_ type: Field.DataType, primaryKey: Bool) -> String {
+        switch type {
+        case .id(let type):
+            let typeString: String
+            switch type {
+            case .int:
+                if primaryKey {
+                    typeString = "SERIAL PRIMARY KEY"
+                } else {
+                    typeString = "INT8"
+                }
+            case .uuid:
+                if primaryKey {
+                    typeString = "UUID PRIMARY KEY"
+                } else {
+                    typeString = "UUID"
+                }
+            case .custom(let custom):
+                typeString = custom
+            }
+            return typeString
+        case .int:
+            return "INT8"
+        case .string(let length):
+            if let length = length {
+                return "VARCHAR(\(length))"
+            } else {
+                return "VARCHAR(255)"
+            }
+        case .double:
+            return "FLOAT8"
+        case .bool:
+            return "BOOLEAN"
+        case .bytes:
+            return "BYTEA"
+        case .date:
+            return "TIMESTAMP WITH TIME ZONE"
+        case .custom(let type):
+            return type
+        }
+    }
+    
+    // MARK: Query Types
 
     public override func limit(_ limit: RawOr<Limit>) -> String {
         var statement: [String] = []
@@ -186,19 +192,15 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
             values
         )
     }
+    
+    // MARK: - Convenience
 
     public override func placeholder(_ value: Node) -> String {
-        return nextPlaceholder
-    }
-
-    private var nextPlaceholder: String {
         positionalIndex += 1
         return "$\(positionalIndex)"
     }
-
-    // Not needed?
-    // public override func sql(_ string: String) -> String {
-    //     return "\(string)"
-    // }
-
+    
+    public override func escape(_ string: String) -> String {
+        return "\"\(string)\""
+    }
 }

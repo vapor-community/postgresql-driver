@@ -44,18 +44,16 @@ public final class Driver: Fluent.Driver {
     //         the port number for the TCP/IP connection.
     // - parameter socket: If socket is not NULL, the string specifies
     //         the socket or named pipe to use.
-    // - parameter encoding: Usually "utf8".
     //
     // - throws: `Error.connection(String)` if the call to connection fails.
     //
     public convenience init(
-        masterHostname: String = "localhost",
+        masterHostname: String,
         readReplicaHostnames: [String],
         user: String,
         password: String,
         database: String,
         port: Int = 5432,
-        encoding: String = "UTF8",
         idKey: String = "id",
         idType: IdentifierType = .int,
         keyNamingConvention: KeyNamingConvention = .snake_case
@@ -117,20 +115,20 @@ public final class Driver: Fluent.Driver {
     }
 }
 
-// extension Driver {
-//     // Executes a PostgreSQL transaction on a single connection.
-//     //
-//     // The argument supplied to the closure is the connection to use for
-//     // this transaction.
-//     //
-//     // It may be ignored if you are using Fluent and not performing
-//     // complex threading.
-//     public func transaction(_ closure: (PostgreSQL.Connection) throws -> ()) throws {
-//         let conn = try master.makeConnection()
-//         try conn.transaction {
-//             let wrapped = PostgreSQLDriver.Connection(conn)
-//             wrapped.queryLogger = self.queryLogger
-//             try closure(wrapped)
-//         }
-//     }
-// }
+extension Driver: Transactable {
+    /// Executes a PostgreSQL transaction on a single connection.
+    ///
+    /// The argument supplied to the closure is the connection
+    /// to use for this transaction.
+    ///
+    /// It may be ignored if you are using Fluent and not performing
+    /// complex threading.
+     public func transaction<R>(_ closure: (Fluent.Connection) throws -> R) throws -> R {
+         let conn = try master.makeConnection()
+         return try conn.transaction {
+             let wrapped = PostgreSQLDriver.Connection(conn)
+             wrapped.queryLogger = self.queryLogger
+             return try closure(wrapped)
+         }
+     }
+ }
