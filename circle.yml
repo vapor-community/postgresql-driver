@@ -4,4 +4,4 @@ dependencies:
 
 test:
   override:
-    - eval "$(curl -sL swift.vapor.sh/ci)"
+    - eval "$(curl -sL https://swift.vapor.sh/ci-3.1)"
