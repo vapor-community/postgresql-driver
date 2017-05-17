@@ -38,8 +38,24 @@ class FluentPostgreSQLTests: XCTestCase {
         try database.index("name", for: Atom.self)
     }
     
+    func testInsertWithId() throws {
+        let driver = PostgreSQLDriver.Driver.makeTest()
+        let database = Database(driver)
+        
+        defer {
+            try! database.delete(Atom.self)
+        }
+        
+        try Atom.prepare(database)
+        let atom = Atom(id: Identifier(5), name: "Test", protons: 3, weight: 1.5)
+        try atom.save()
+        
+        XCTAssertNotNil(try Atom.makeQuery().find(5))
+    }
+
     static let allTests = [
         ("testAll", testAll),
-        ("testForeignKey", testForeignKey)
+        ("testForeignKey", testForeignKey),
+        ("testInsertWithId", testInsertWithId)
     ]
 }

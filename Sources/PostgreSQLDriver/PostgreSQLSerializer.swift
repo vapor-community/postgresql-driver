@@ -21,7 +21,10 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
         
         // Remove ID from the query data to avoid constraint violation error
         var data = query.data
-        data.removeValue(forKey: .some(E.idKey))
+        
+        if case .some(.some(let id)) = data[.some(E.idKey)], id.isNull {
+            data.removeValue(forKey: .some(E.idKey))
+        }
         
         if !data.isEmpty {
             statement += keys(data.keys.array)
