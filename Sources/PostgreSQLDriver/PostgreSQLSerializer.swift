@@ -69,7 +69,7 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
                 if primaryKey {
                     typeString = "SERIAL PRIMARY KEY"
                 } else {
-                    typeString = "INT8"
+                    typeString = "INT4"
                 }
             case .uuid:
                 if primaryKey {
