@@ -82,7 +82,7 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
             }
             return typeString
         case .int:
-            return "INT8"
+            return "INTEGER"
         case .string(let length):
             if let length = length {
                 return "VARCHAR(\(length))"
