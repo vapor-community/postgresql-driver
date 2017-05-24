@@ -46,11 +46,12 @@ class FluentPostgreSQLTests: XCTestCase {
             try! database.delete(Atom.self)
         }
         
+        let id = UUID()
         try Atom.prepare(database)
-        let atom = Atom(id: Identifier(5), name: "Test", protons: 3, weight: 1.5)
+        let atom = Atom(id: Identifier(id.uuidString), name: "Test", protons: 3, weight: 1.5)
         try atom.save()
         
-        XCTAssertNotNil(try Atom.makeQuery().find(5))
+        XCTAssertNotNil(try Atom.makeQuery().find(id))
     }
 
     static let allTests = [
