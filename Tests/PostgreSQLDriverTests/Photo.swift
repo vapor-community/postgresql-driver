@@ -19,7 +19,7 @@ class Photo: Entity, Preparation {
     func makeRow() throws -> Row {
         var row = Row()
         try row.set("title", title)
-        try row.set("content", content)
+        try row.set("content", StructuredData.bytes(content))
         return row
     }
     
