@@ -66,7 +66,8 @@ class FluentPostgreSQLTests: XCTestCase {
 
             try Photo.prepare(database)
 
-            let randomData = try OSRandom.bytes(count: 100)
+            // harder test: try OSRandom.bytes(count: 10_000_000)
+            let randomData: [UInt8] = [48, 49, 50, 51, 52]
 
             let photo = Photo(title: "The Treachery of Images", content: randomData)
             try photo.save()

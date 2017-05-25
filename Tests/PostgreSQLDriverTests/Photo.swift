@@ -13,7 +13,7 @@ class Photo: Entity, Preparation {
 
     required init(row: Row) throws {
         title = try row.get("title")
-        content = try row.get("content")
+        content = row["content"]?.bytes ?? []
     }
 
     func makeRow() throws -> Row {
