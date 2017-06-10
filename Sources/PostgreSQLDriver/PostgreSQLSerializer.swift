@@ -154,10 +154,23 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
                 }
             }
         case .subset(let key, let s, let subValues):
-            statement += escape(filter.entity.entity) + "." + escape(key)
-            statement += scope(s)
-            statement += placeholders(subValues)
-            values += subValues
+            if subValues.count == 0 {
+                switch s {
+                case .in:
+                    // where in empty set should
+                    // not match any rows
+                    statement += "false"
+                case .notIn:
+                    // where not in empty set should
+                    // match all rows
+                    statement += "true"
+                }
+            } else {
+                statement += escape(filter.entity.entity) + "." + escape(key)
+                statement += scope(s)
+                statement += placeholders(subValues)
+                values += subValues
+            }
         case .group(let relation, let f):
             if f.count == 0 {
                 // empty subqueries should result to false to protect
