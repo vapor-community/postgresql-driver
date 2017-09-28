@@ -18,6 +18,6 @@ let package = Package(
     ],
     targets: [
         .target(name: "PostgreSQLDriver", dependencies: ["PostgreSQL", "Fluent", "Random"]),
-        .testTarget(name: "PostgreSQLDriverTests", dependencies: ["PostgreSQLDriver"]),
+        .testTarget(name: "PostgreSQLDriverTests", dependencies: ["PostgreSQLDriver", "FluentTester"]),
     ]
 )
