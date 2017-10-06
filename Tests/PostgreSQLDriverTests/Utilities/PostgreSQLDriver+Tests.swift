@@ -9,7 +9,7 @@ extension PostgreSQLDriver.Driver {
             let postgresql = try PostgreSQL.Database(
                 hostname: "127.0.0.1",
                 port: 5432,
-                database: "test",
+                database: "postgres",
                 user: "postgres",
                 password: ""
             )
