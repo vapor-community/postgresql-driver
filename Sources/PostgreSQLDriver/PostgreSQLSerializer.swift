@@ -6,7 +6,12 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
 
     public override func serialize() -> (String, [Node]) {
         positionalIndex = 0
-        return super.serialize()
+        switch query.action {
+        case .aggregate(let field, let agg):
+            return aggregate(field ?? E.idKey, agg)
+        default:
+            return super.serialize()
+        }
     }
     
     // MARK: Data
