@@ -67,20 +67,20 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
             switch type {
             case .int:
                 if primaryKey {
-                    typeString = "SERIAL PRIMARY KEY"
+                    typeString = "SERIAL"
                 } else {
                     typeString = "INT4"
                 }
             case .uuid:
-                if primaryKey {
-                    typeString = "UUID PRIMARY KEY"
-                } else {
-                    typeString = "UUID"
-                }
+                typeString = "UUID"
             case .custom(let custom):
                 typeString = custom
             }
-            return typeString
+            if primaryKey {
+                return typeString + " PRIMARY KEY"
+            } else {
+                return typeString
+            }
         case .int:
             return "INT8"
         case .string(let length):
