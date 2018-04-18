@@ -87,7 +87,7 @@ public final class PostgreSQLSerializer<E: Entity>: GeneralSQLSerializer<E> {
             if let length = length {
                 return "VARCHAR(\(length))"
             } else {
-                return "VARCHAR(255)"
+                return "VARCHAR"
             }
         case .double:
             return "FLOAT8"
